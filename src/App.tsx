@@ -9,6 +9,9 @@ import {
   skillCards,
   social,
 } from "./content";
+import { CodeCast } from "./CodeCast";
+import { MetalName } from "./MetalName";
+import { SpaceField } from "./SpaceField";
 import "./index.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -59,6 +62,7 @@ export default function App() {
   const [navOn, setNavOn] = useState(false);
   const [lang, setLang] = useState<Lang>("en");
   const [theme, setTheme] = useState<Theme>("dark");
+  const [motion, setMotion] = useState(true);
 
   const t = copy[lang];
   const skills = skillCards[lang];
@@ -68,22 +72,37 @@ export default function App() {
   useEffect(() => {
     setLang(readLang());
     setTheme(readTheme());
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setMotion(!mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
+    // Keep html dir=ltr so ScrollTrigger pin/scrub math stays correct.
+    // Visual RTL lives on .page (see JSX).
     document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
+    document.documentElement.dir = "ltr";
+    document.documentElement.dataset.lang = lang;
     localStorage.setItem("mas-lang", lang);
     document.title =
       lang === "fa"
         ? "محمد علی سلیمیان — مهندس فرانت‌اند"
         : "Mohammad Ali Salimian — Front-End Engineer";
+
+    const id = window.setTimeout(() => ScrollTrigger.refresh(), 80);
+    return () => window.clearTimeout(id);
   }, [lang]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("mas-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.motion = motion ? "on" : "off";
+  }, [motion]);
 
   useEffect(() => {
     const onScroll = () => setNavOn(window.scrollY > 40);
@@ -93,7 +112,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce =
+      !motion ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const ctx = gsap.context(() => {
       gsap.to(progressRef.current, {
         width: "100%",
@@ -151,6 +172,39 @@ export default function App() {
         },
       });
 
+      const tiltEl = document.querySelector(
+        ".hero__panel-tilt",
+      ) as HTMLElement | null;
+      const hero = document.querySelector(".hero") as HTMLElement | null;
+      if (tiltEl && hero) {
+        let mx = 0;
+        let my = 0;
+        let pending = false;
+        const flush = () => {
+          pending = false;
+          tiltEl.style.transform = `perspective(900px) rotateY(${mx}deg) rotateX(${my}deg)`;
+        };
+        const onMove = (e: MouseEvent) => {
+          const r = hero.getBoundingClientRect();
+          mx = ((e.clientX - r.left) / r.width - 0.5) * 10;
+          my = ((e.clientY - r.top) / r.height - 0.5) * -8;
+          if (!pending) {
+            pending = true;
+            requestAnimationFrame(flush);
+          }
+        };
+        const onLeave = () => {
+          mx = 0;
+          my = 0;
+          if (!pending) {
+            pending = true;
+            requestAnimationFrame(flush);
+          }
+        };
+        hero.addEventListener("mousemove", onMove, { passive: true });
+        hero.addEventListener("mouseleave", onLeave);
+      }
+
       const track = document.querySelector(".ticker__track") as HTMLElement | null;
       if (track) {
         const loop = gsap.to(track, {
@@ -170,17 +224,21 @@ export default function App() {
       }
 
       gsap.utils.toArray<HTMLElement>(".will-fade").forEach((el) => {
-        gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 88%",
-            toggleActions: "play none none reverse",
+        gsap.fromTo(
+          el,
+          { opacity: 0, y: 36 },
+          {
+            opacity: 1,
+            y: 0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 92%",
+              end: "top 58%",
+              scrub: 0.65,
+            },
           },
-        });
+        );
       });
 
       gsap.from(".stat strong", {
@@ -198,7 +256,17 @@ export default function App() {
 
       const rail = document.querySelector(".skills-rail") as HTMLElement | null;
       const pin = document.querySelector(".skills-pin") as HTMLElement | null;
-      if (rail && pin) {
+      const skillsSticky = document.querySelector(
+        ".skills-pin__sticky",
+      ) as HTMLElement | null;
+      if (rail && pin && skillsSticky) {
+        gsap.set(skillsSticky, { autoAlpha: 1, y: 0, clearProps: "visibility" });
+        gsap.set(rail.querySelectorAll(".skill-card"), {
+          autoAlpha: 1,
+          y: 0,
+          clearProps: "visibility,transform",
+        });
+
         // Isolate from html[dir=rtl] so translateX math stays LTR-correct
         const getDistance = () =>
           Math.max(0, rail.scrollWidth - window.innerWidth + 64);
@@ -210,18 +278,16 @@ export default function App() {
             x: () => -getDistance(),
             ease: "none",
             force3D: true,
+            immediateRender: false,
             scrollTrigger: {
               trigger: pin,
               pin: true,
-              scrub: 1,
+              pinSpacing: true,
+              scrub: true,
               start: "top top",
-              end: () => `+=${getDistance() + window.innerHeight * 0.4}`,
+              end: () => `+=${getDistance()}`,
               invalidateOnRefresh: true,
-              anticipatePin: 1,
-              fastScrollEnd: true,
-              onRefreshInit: () => {
-                gsap.set(rail, { x: 0 });
-              },
+              anticipatePin: 0,
             },
           },
         );
@@ -299,11 +365,18 @@ export default function App() {
       });
     }, rootRef);
 
-    const refresh = () => ScrollTrigger.refresh();
+    const refresh = () => {
+      ScrollTrigger.sort();
+      ScrollTrigger.refresh();
+    };
     requestAnimationFrame(refresh);
+    const later = window.setTimeout(refresh, 300);
 
-    return () => ctx.revert();
-  }, [lang]);
+    return () => {
+      window.clearTimeout(later);
+      ctx.revert();
+    };
+  }, [lang, motion]);
 
   const go = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -315,6 +388,7 @@ export default function App() {
       <div className="progress" ref={progressRef} />
       <div className="noise" aria-hidden />
 
+      <div className="page" dir={lang === "fa" ? "rtl" : "ltr"}>
       <header className={`nav ${navOn ? "is-scrolled" : ""}`}>
         <div className="nav__inner">
           <a
@@ -373,10 +447,12 @@ export default function App() {
           <div className="hero__glow" aria-hidden />
           <div className="hero__content">
             <p className="hero__eyebrow">{t.eyebrow}</p>
-            <h1 className="hero__name">
-              <span className="hero__name-full">{t.brandFirst}</span>
-              <span className="hero__name-accent">{t.brandLast}</span>
-            </h1>
+            <MetalName
+              line1={t.brandFirst}
+              line2={t.brandLast}
+              motion={motion}
+              rtl={lang === "fa"}
+            />
             <p className="hero__role">{t.role}</p>
             <p className="hero__lead">{t.lead}</p>
             <div className="hero__actions">
@@ -407,13 +483,16 @@ export default function App() {
             </div>
           </div>
           <aside className="hero__panel" aria-hidden>
-            <div className="hero__panel-bar">
-              <i />
-              <i />
-              <i />
-              <span>engineer.ts</span>
+            <div className="hero__panel-tilt">
+              <div className="hero__panel-bar">
+                <i />
+                <i />
+                <i />
+                <span>engineer.ts</span>
+              </div>
+              <pre className="hero__panel-code">{HERO_CODE}</pre>
+              <div className="hero__panel-melt" />
             </div>
-            <pre className="hero__panel-code">{HERO_CODE}</pre>
           </aside>
         </section>
 
@@ -453,9 +532,18 @@ export default function App() {
           </div>
         </section>
 
+        <CodeCast steps={t.castSteps} motion={motion} />
+
+        <SpaceField
+          kicker={t.fieldKicker}
+          title={t.fieldTitle}
+          body={t.fieldBody}
+          motion={motion}
+        />
+
         <section className="skills-pin" id="skills">
           <div className="skills-pin__sticky">
-            <div className="wrap section__head will-fade">
+            <div className="wrap section__head skills-pin__head">
               <p className="kicker">{t.skillsKicker}</p>
               <h2 className="heading">{t.skillsTitle}</h2>
             </div>
@@ -616,6 +704,7 @@ export default function App() {
         </span>
         <span>{t.footerRole}</span>
       </footer>
+      </div>
     </div>
   );
 }

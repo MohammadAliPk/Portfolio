@@ -55,11 +55,47 @@ html[data-theme="light"] {
 
 html {
   scroll-behavior: auto;
+  background: var(--bg);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--teal) 55%, var(--muted))
+    color-mix(in srgb, var(--bg-elev) 70%, transparent);
 }
 
 body {
   min-height: 100vh;
   overflow-x: hidden;
+  background: var(--bg);
+}
+
+/* Chromium / Safari scrollbar */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--bg) 88%, var(--bg-elev));
+  border-inline-start: 1px solid var(--line);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--teal) 70%, var(--sand)),
+    color-mix(in srgb, var(--teal-dim) 80%, var(--muted))
+  );
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--bg) 88%, var(--bg-elev));
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--teal), var(--sand));
+  border: 2px solid color-mix(in srgb, var(--bg) 88%, var(--bg-elev));
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -70,13 +106,15 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 55% at 15% 10%, var(--glow-a), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 90% 25%, var(--glow-b), transparent 58%),
-    radial-gradient(ellipse 60% 40% at 50% 85%, var(--glow-a), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 12% 8%, var(--glow-a), transparent 62%),
+    radial-gradient(ellipse 80% 60% at 88% 22%, var(--glow-b), transparent 60%),
+    radial-gradient(ellipse 70% 55% at 48% 78%, var(--glow-a), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 70% 55%, var(--glow-b), transparent 70%),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px),
     var(--bg);
   background-size:
+    auto,
     auto,
     auto,
     auto,
@@ -141,7 +179,7 @@ button {
 }
 
 .nav__inner {
-  width: min(100% - var(--pad) * 2, var(--max));
+  width: min(100% - var(--pad) * 2, 1120px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -178,6 +216,18 @@ button {
 .nav__switch:hover {
   color: var(--teal);
   border-color: var(--teal);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .nav.is-scrolled .nav__inner {
@@ -293,6 +343,19 @@ button {
   line-height: 1.65;
   direction: ltr;
   text-align: left;
+  transition: box-shadow 0.4s var(--ease);
+}
+
+.hero__panel-tilt {
+  transform-style: preserve-3d;
+  will-change: transform;
+  height: 100%;
+}
+
+.hero__panel:hover {
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(45, 212, 191, 0.35);
 }
 
 @media (max-width: 899px) {
@@ -363,18 +426,18 @@ button {
   margin-bottom: 1.1rem;
 }
 
-html[dir="ltr"] .hero__eyebrow {
+.page[dir="ltr"] .hero__eyebrow {
   font-family: var(--mono);
   font-size: 0.72rem;
   direction: ltr;
 }
 
-html[dir="ltr"] .hero__eyebrow::before {
+.page[dir="ltr"] .hero__eyebrow::before {
   content: "//";
   color: var(--sand);
 }
 
-html[dir="rtl"] .hero__eyebrow {
+.page[dir="rtl"] .hero__eyebrow {
   direction: rtl;
 }
 
@@ -386,6 +449,30 @@ html[dir="rtl"] .hero__eyebrow {
   margin-bottom: 1.15rem;
 }
 
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.metal-name {
+  position: relative;
+  width: 100%;
+  min-height: clamp(5.2rem, 14vw, 8.2rem);
+  margin-bottom: 1.15rem;
+}
+
+.metal-name--rtl {
+  min-height: clamp(5.8rem, 16vw, 9rem);
+}
+
+.metal-name__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
 .hero__name-full {
   display: block;
   color: var(--ink);
@@ -395,6 +482,319 @@ html[dir="rtl"] .hero__eyebrow {
   display: block;
   color: var(--teal);
   margin-top: 0.15em;
+}
+
+.hero__panel-melt {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 52px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--bg) 40%, transparent) 40%,
+    var(--bg) 100%
+  );
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 10 C8 2 16 18 28 9 C40 1 48 20 60 10 C72 2 80 19 92 9 C104 1 112 16 120 8 V24 H0Z'/%3E%3C/svg%3E");
+  mask-size: 140% 100%;
+  opacity: 0.95;
+  animation: melt-shift 5.5s ease-in-out infinite alternate;
+}
+
+html[data-motion="off"] .hero__panel-melt {
+  animation: none;
+}
+
+@keyframes melt-shift {
+  from {
+    transform: translateY(0) scaleY(1);
+    mask-position: 0% 0%;
+  }
+  to {
+    transform: translateY(4px) scaleY(1.12);
+    mask-position: 100% 0%;
+  }
+}
+
+/* pinned scenes stay LTR so ScrollTrigger math does not flip */
+.page[dir="rtl"] .pin-spacer,
+.page[dir="rtl"] .cast,
+.page[dir="rtl"] .skills-pin,
+.page[dir="rtl"] .skills-rail,
+.page[dir="rtl"] .ticker {
+  direction: ltr;
+}
+
+.page[dir="rtl"] .cast__step,
+.page[dir="rtl"] .skills-pin__head,
+.page[dir="rtl"] .skill-card {
+  direction: rtl;
+  text-align: right;
+}
+
+.page[dir="rtl"] .heading {
+  max-width: 18ch;
+  line-height: 1.45;
+}
+
+.page[dir="rtl"] .copy,
+.page[dir="rtl"] .hero__lead {
+  max-width: 42ch;
+  line-height: 2;
+}
+
+.page[dir="rtl"] .hero__panel {
+  justify-self: end;
+}
+
+/* p4ndora-inspired code cast */
+.cast {
+  position: relative;
+  z-index: 2;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  --cast-p: 0;
+}
+
+.cast::before,
+.cast::after,
+.field::before,
+.field::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  z-index: 4;
+  height: clamp(4rem, 14vh, 7rem);
+  pointer-events: none;
+}
+
+.cast::before,
+.field::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg) 70%, transparent),
+    transparent
+  );
+}
+
+.cast::after,
+.field::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--bg) 70%, transparent),
+    transparent
+  );
+}
+
+.cast__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.cast__copy {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  padding-block: calc(var(--nav) + 2rem);
+  pointer-events: none;
+}
+
+.cast__step {
+  grid-area: 1 / 1;
+  max-width: 34ch;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.4s var(--ease),
+    transform 0.45s var(--ease);
+}
+
+.cast[data-step="0"] .cast__step[data-i="0"],
+.cast[data-step="1"] .cast__step[data-i="1"],
+.cast[data-step="2"] .cast__step[data-i="2"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cast__rail {
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: var(--pad);
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.cast__rail span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  transition:
+    background 0.35s,
+    transform 0.35s var(--ease),
+    box-shadow 0.35s,
+    height 0.35s var(--ease);
+}
+
+.cast[data-step="0"] .cast__rail span[data-i="0"],
+.cast[data-step="1"] .cast__rail span[data-i="1"],
+.cast[data-step="2"] .cast__rail span[data-i="2"] {
+  background: var(--teal);
+  height: 22px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.16);
+}
+
+.cast__hint {
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: var(--pad);
+  bottom: 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  opacity: 0.7;
+}
+
+html[data-motion="on"] .cast__hint {
+  animation: cast-hint 2.2s var(--ease) infinite;
+}
+
+@keyframes cast-hint {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: rotate(180deg) translateY(0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: rotate(180deg) translateY(8px);
+  }
+}
+
+@media (max-width: 720px) {
+  .cast__copy {
+    align-content: end;
+    padding-bottom: 3rem;
+  }
+
+  .cast__hint {
+    display: none;
+  }
+}
+
+/* 3D depth field — pinned scrub, kept LTR so the pin does not jump in RTL */
+.field {
+  position: relative;
+  z-index: 2;
+  direction: ltr;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  --field-p: 0;
+}
+
+.field__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.field__mount {
+  width: 100%;
+  height: 100%;
+}
+
+.field__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.field__copy {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  gap: 0.85rem;
+  padding-block: calc(var(--nav) + 1.5rem);
+  max-width: min(100% - var(--pad) * 2, 28rem);
+  margin-inline-start: max(var(--pad), calc((100vw - var(--max)) / 2));
+  pointer-events: none;
+}
+
+.page[dir="rtl"] .field__copy {
+  direction: rtl;
+  text-align: right;
+}
+
+.page[dir="rtl"] .field__copy {
+  margin-inline-start: auto;
+  margin-inline-end: max(var(--pad), calc((100vw - var(--max)) / 2));
+}
+
+.field__copy .heading {
+  max-width: 14ch;
+}
+
+.page[dir="rtl"] .field__copy .heading {
+  max-width: 16ch;
+}
+
+.field__copy .copy {
+  max-width: 42ch;
+}
+
+.field__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 58% 52% at 60% 44%,
+      transparent 30%,
+      color-mix(in srgb, var(--bg) 35%, transparent) 78%,
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--bg) 45%, transparent) 0%,
+      transparent 46%
+    );
+}
+
+@media (max-width: 720px) {
+  .field__copy {
+    align-content: end;
+    padding-bottom: 2.5rem;
+  }
+
+  .field__vignette {
+    background: radial-gradient(
+      ellipse 75% 58% at 50% 38%,
+      transparent 22%,
+      color-mix(in srgb, var(--bg) 40%, transparent) 80%,
+      transparent 100%
+    );
+  }
 }
 
 .hero__role {
@@ -578,18 +978,75 @@ html[dir="rtl"] .hero__eyebrow {
 /* Keep horizontal scroll mechanics in LTR even when site is RTL */
 .skills-pin {
   position: relative;
+  z-index: 3;
   overflow: hidden;
-  background: transparent;
   direction: ltr;
+  /* overlap the planet exit so the handoff is not an empty viewport */
+  margin-top: -42vh;
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 18%, var(--glow-a), transparent 58%),
+    radial-gradient(ellipse 55% 50% at 92% 72%, var(--glow-b), transparent 55%),
+    radial-gradient(ellipse 45% 40% at 55% 40%, var(--glow-a), transparent 62%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    var(--bg);
+  background-size:
+    auto,
+    auto,
+    auto,
+    48px 48px,
+    48px 48px,
+    auto;
+}
+
+.skills-pin::before {
+  content: "";
+  position: absolute;
+  inset: 12% auto auto 58%;
+  width: min(42vw, 420px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--teal) 22%, transparent),
+    transparent 68%
+  );
+  filter: blur(2px);
+}
+
+.skills-pin::after {
+  content: "";
+  position: absolute;
+  inset: auto 8% 18% auto;
+  width: min(28vw, 260px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--sand) 16%, transparent),
+    transparent 70%
+  );
 }
 
 .skills-pin__sticky {
+  position: relative;
+  z-index: 1;
   height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.35rem;
+  padding-block: calc(var(--nav) + 0.5rem) 2rem;
+  box-sizing: border-box;
   direction: ltr;
+}
+
+.skills-pin__head .heading {
+  max-width: 16ch;
 }
 
 .skills-pin .section__head {
@@ -597,7 +1054,7 @@ html[dir="rtl"] .hero__eyebrow {
   text-align: left;
 }
 
-html[dir="rtl"] .skills-pin .section__head {
+.page[dir="rtl"] .skills-pin .section__head {
   direction: rtl;
   text-align: right;
 }
@@ -619,8 +1076,17 @@ html[dir="rtl"] .skills-pin .section__head {
   flex: 0 0 min(78vw, 280px);
   min-height: 220px;
   padding: 0;
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--teal) 18%, var(--line));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--bg-elev) 92%, var(--teal) 8%),
+      color-mix(in srgb, var(--bg-elev) 96%, transparent)
+    );
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -628,7 +1094,7 @@ html[dir="rtl"] .skills-pin .section__head {
   text-align: start;
 }
 
-html[dir="rtl"] .skill-card {
+.page[dir="rtl"] .skill-card {
   direction: rtl;
 }
 
@@ -809,7 +1275,7 @@ html[dir="rtl"] .skill-card {
   background: var(--teal);
 }
 
-html[dir="ltr"] .project__bar {
+.page[dir="ltr"] .project__bar {
   inset-inline: 0 0 0 auto;
 }
 
@@ -988,5 +1454,6 @@ html[dir="ltr"] .project__bar {
 
 .will-fade {
   opacity: 0;
-  transform: translateY(40px);
+  transform: translateY(36px);
+  will-change: transform, opacity;
 }
